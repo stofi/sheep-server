@@ -27,6 +27,9 @@ interface MoveData {
     z: number
     thetaY: number
 }
+interface ChatData {
+    message: string
+}
 
 const ENABLE_LOG = false
 
@@ -197,6 +200,22 @@ class SheepServer {
                     socket
                         .to(room.id)
                         .emit('playerMoved', { x, z, thetaY, player })
+                }
+            }
+        }
+    }
+    handleChat(socket: socketio.Socket) {
+        return ({ message }: ChatData) => {
+            logger(`${socket.id} said ${message}`)
+            // find room
+            const room = this.findRoomWithPlayer(socket.id)
+            if (room) {
+                const player = this.findPlayerInRoom(socket.id, room)
+                if (player) {
+                    socket.to(room.id).emit('playerChat', {
+                        player,
+                        message,
+                    })
                 }
             }
         }
