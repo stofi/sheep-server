@@ -31,7 +31,7 @@ interface ChatData {
     message: string
 }
 
-const ENABLE_LOG = false
+const ENABLE_LOG = true
 
 const logger = (...args: any[]) => {
     ENABLE_LOG && console.log(...args)
@@ -183,11 +183,11 @@ class SheepServer {
 
     handleMove(socket: socketio.Socket) {
         return ({ x, z, thetaY }: MoveData) => {
-            logger(
-                `${socket.id} moved to ${x.toFixed(2)}, ${z.toFixed(
-                    2
-                )}, ${thetaY.toFixed(2)}`
-            )
+            // logger(
+            //     `${socket.id} moved to ${x.toFixed(2)}, ${z.toFixed(
+            //         2
+            //     )}, ${thetaY.toFixed(2)}`
+            // )
             // find room
             const room = this.findRoomWithPlayer(socket.id)
             if (room) {
@@ -213,6 +213,7 @@ class SheepServer {
             if (room) {
                 const player = this.findPlayerInRoom(socket.id, room)
                 if (player) {
+                    
                     socket.to(room.id).emit('playerChat', {
                         player,
                         message,
