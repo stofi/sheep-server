@@ -52,6 +52,7 @@ class SheepServer {
         socket.on('disconnect', this.handleDisconnect(socket).bind(this))
         socket.on('leave', this.handleDisconnect(socket).bind(this))
         socket.on('move', this.handleMove(socket).bind(this))
+        socket.on('chat', this.handleChat(socket).bind(this))
     }
     handleJoin(socket: socketio.Socket) {
         return ({ roomId, roomPassword, playerName, color }: JoinData) => {
