@@ -95,6 +95,8 @@ class SheepServer {
                 return
             }
 
+            // if
+
             const player: Player = {
                 name: sanitizedPlayerName,
                 color: sanitizedColor,
@@ -110,7 +112,7 @@ class SheepServer {
             if (roomExists) {
                 const room = roomExists
                 const playerInRoom = room.players.find(
-                    (p) => p.id === socket.id
+                    (p) => p.name === sanitizedPlayerName
                 )
                 if (playerInRoom) {
                     logger(`${playerName} joined lobby`)
@@ -120,28 +122,35 @@ class SheepServer {
                 }
             }
 
-            if (!roomExists && this.rooms.length < 10) {
-                logger(`${playerName} created room ${sanitizedRoomId}`)
-                const room = {
-                    id: sanitizedRoomId,
-                    password: roomPassword,
-                    players: [player],
+            if (!roomExists) {
+                if (this.rooms.length < 10) {
+                    logger(
+                        `${playerName} created room ${sanitizedRoomId} ${
+                            roomPassword ? `with password: ${roomPassword}` : ''
+                        }`
+                    )
+                    const room = {
+                        id: sanitizedRoomId,
+                        password: roomPassword,
+                        players: [player],
+                    }
+                    this.rooms.push(room)
+                    socket.emit('joined', {
+                        room: {
+                            ...room,
+                            roomPassword: '',
+                        },
+                        player,
+                    })
+                } else {
+                    logger(`${playerName} joined lobby`)
+                    logger(`Error: Too many rooms`)
+                    socket.emit('error', 'Too many rooms')
+                    return
                 }
-                this.rooms.push(room)
-                socket.emit('joined', {
-                    room: {
-                        ...room,
-                        roomPassword: '',
-                    },
-                    player,
-                })
-            } else if (!roomExists) {
-                logger(`${playerName} joined lobby`)
-                logger(`Error: Too many rooms`)
-                socket.emit('error', 'Too many rooms')
-                return
             } else if (roomExists) {
                 // check password
+
                 if (roomExists.password === roomPassword) {
                     this.addPlayerToRoom(player, roomExists)
 
@@ -213,7 +222,6 @@ class SheepServer {
             if (room) {
                 const player = this.findPlayerInRoom(socket.id, room)
                 if (player) {
-                    
                     socket.to(room.id).emit('playerChat', {
                         player,
                         message,
@@ -238,6 +246,10 @@ class SheepServer {
 
     removePlayerFromRoom(playerId: string, room: Room) {
         room.players = room.players.filter((player) => player.id !== playerId)
+        // if room empty, remove it
+        if (room.players.length === 0) {
+            this.rooms = this.rooms.filter((r) => r.id !== room.id)
+        }
     }
 
     addPlayerToRoom(player: Player, room: Room) {
